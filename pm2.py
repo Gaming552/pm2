@@ -37,3 +37,39 @@ async def info(app):
 
 async def logs(app):
     subprocess.run(["tail", "-f", f"{app}.log"])
+
+async def clean_runtime_files(path):
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith(".pyc"):
+                os.remove(os.path.join(root, file))
+
+    for root, dirs, files in os.walk(path):
+        for dir in dirs:
+            if dir == "__pycache__":
+                shutil.rmtree(os.path.join(root, dir))
+
+    if os.path.exists(os.path.join(path, "build")):
+        shutil.rmtree(os.path.join(path, "build"))
+    if os.path.exists(os.path.join(path, "dist")):
+        shutil.rmtree(os.path.join(path, "dist"))
+
+    requirements = os.path.join(path, "requirements.txt")
+    if os.path.exists(requirements):
+        with open(requirements, "r") as f:
+            dependencies = f.read().splitlines()
+            for dependency in dependencies:
+                dependency = os.path.join(path, "venv", "lib", "python3.9", "site-packages", dependency)
+                if os.path.exists(dependency):
+                    for root, dirs, files in os.walk(dependency):
+                        for file in files:
+                            if file.endswith(".pyc"):
+                                os.remove(os.path.join(root, file))
+                    for root, dirs, files in os.walk(dependency):
+                        for dir in dirs:
+                            if dir == "__pycache__":
+                                shutil.rmtree(os.path.join(root, dir))
+                    if os.path.exists(os.path.join(dependency, "build")):
+                        shutil.rmtree(os.path.join(dependency, "build"))
+                    if os.path.exists(os.path.join(dependency, "dist")):
+                        shutil.rmtree(os.path.join(dependency, "dist"))
