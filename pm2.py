@@ -73,3 +73,20 @@ async def clean_runtime_files(path):
                         shutil.rmtree(os.path.join(dependency, "build"))
                     if os.path.exists(os.path.join(dependency, "dist")):
                         shutil.rmtree(os.path.join(dependency, "dist"))
+
+async def reset_database(mysql, redis):
+    import aiomysql, aioredis
+    os.system("pip install aioredis aiomysql")
+    mysql_conn = await aiomysql.connect(**mysql)
+
+    async with mysql_conn.cursor() as cursor:
+        await cursor.execute("DROP DATABASE IF EXISTS lisk")
+        #await cursor.execute("CREATE DATABASE lisk")
+
+    mysql_conn.close()
+
+    redis_conn = await aioredis.create_redis_pool(**redis)
+
+    await redis_conn.flushdb()
+
+    redis_conn.close()
